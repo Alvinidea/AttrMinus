@@ -1,0 +1,4 @@
+﻿  main.cpp
+e:\cplus\test\attrminus\attrminus\main.cpp(269): warning C4018: “<”: 有符号/无符号不匹配
+e:\cplus\test\attrminus\attrminus\main.cpp(273): warning C4553: “==”: 未使用表达式结果；是否打算使用“=”?
+  AttrMinus.vcxproj -> E:\Cplus\Test\AttrMinus\Debug\AttrMinus.exe
