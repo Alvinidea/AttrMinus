@@ -109,6 +109,8 @@ void setDivAttr(int dontConsider, vector<int> *needAttr,int NUM = 4)
 	}
 }
 
+
+
 //判断vector的某一元素是否存在
 bool is_element_in_vector(vector<int> *v, int element) {
 	vector<int>::iterator it;
@@ -158,7 +160,7 @@ void calPOS(vector<vector<int>>* D, vector<vector<int>> *ind_p_ai, vector<int> *
 	}
 	std::sort(POS->begin(), POS->end());
 	if( ai != -1)
-		cout << "POS p-a" << ai+1 << "(D) : { ";
+		cout << "POS p-..."  << "(D) : { ";
 	else
 		cout << "POS p(D) : { ";
 	for (it = POS->begin(); it != POS->end(); it++)
@@ -166,6 +168,7 @@ void calPOS(vector<vector<int>>* D, vector<vector<int>> *ind_p_ai, vector<int> *
 	cout <<" }"<< endl;
 }
 
+// IND(P-ai)
 void calINDP_ai(vector<vector<string>> *ds, vector<vector<int>> *ind_p_ai,int dontConsider)
 {
 	vector<int> *needAttr = new vector<int>();;
@@ -211,6 +214,98 @@ void calINDP_ai(vector<vector<string>> *ds, vector<vector<int>> *ind_p_ai,int do
 	cout << " }" << endl;
 }
 
+
+void setDivAttr(vector<int> *dontConsider, vector<int> *needAttr, int NUM = 4)
+{
+	bool flag = true;
+	for (int i = 0; i < NUM; i++)
+	{
+		flag = true;
+		for (int _att = 0; _att < dontConsider->size(); _att++)
+		{
+			if (i == (*dontConsider)[_att])
+			{//存在和不考虑属性相同的时候 
+				flag = false;
+			}
+		}
+		if(flag == true)
+		{
+			needAttr->push_back(i);
+		}
+	}
+}
+
+/*
+ds ：数据集合
+ind_p_ai：返回结果
+dontConsider：不考虑的属性
+dataNum：数据数目
+
+IND(P-{ai,aj,...,an})
+*/
+void calINDP_matli(vector<vector<string>> *ds, vector<vector<int>> *ind_p_ai, vector<int> *dontConsider,int dataNum=14)
+{
+	//需要考虑的属性
+	vector<int> *needAttr = new vector<int>();;
+
+	vector<vector<int>>::iterator it_u;
+	vector<int>::iterator it;
+	//标记数组 
+	int *C = new int[dataNum];
+	for (int z = 0; z < dataNum; z++)
+	{
+		C[z] = 0;
+	}
+
+	setDivAttr(dontConsider, needAttr);
+
+	for (int z = 0; z < dataNum; z++)
+	{
+		if (C[z] == 0)
+		{//防止多次判断 所以设置一个标记数组
+			vector<int> type;
+			for (int p = 0; p < dataNum; p++)
+			{
+				bool flag = true;
+				int att;
+				//循环判断要考虑的属性 都符合时候（flag = true）
+				for (int _attr = 0; _attr < needAttr->size(); _attr++)
+				{
+					att = (*needAttr)[_attr];
+					if (((*ds)[z])[att] != ((*ds)[p])[att])
+					{
+						flag = false;
+					}
+				}
+				if ( flag == true )
+				{
+					C[p] = 1;
+					type.push_back(p + 1);
+				}
+			}
+			ind_p_ai->push_back(type);
+		}
+	}
+	cout << "\nIND(P-{";
+	for (int t = 0; t < dontConsider->size(); t++)
+	{
+		cout << (*dontConsider)[t] + 1<<',';
+	}
+	cout << "}) : { ";
+	for (it_u = ind_p_ai->begin(); it_u != ind_p_ai->end(); it_u++)
+	{
+		cout << "{";
+		vector<int> *type = &(*it_u);
+		for (it = type->begin(); it != type->end(); it++)
+		{
+			cout << *it << ",";
+		}
+		cout << "}  ";
+	}
+	cout << " }" << endl;
+}
+
+// IND(P)
 void calIND_P(vector<vector<string>> *ds, vector<vector<int>> *ind_p)
 {
 	vector<int> *needAttr = new vector<int>();;
@@ -381,4 +476,30 @@ int main()
 	calRED(POSs, POS_p, red);
 	// 计算CORE
 	calCORE(red,core);
+
+	//--------------------------------------------------------------
+		// 存储所有的 IND(P-ai)
+	vector<vector<vector<int>>*> *ind_pp = new vector<vector<vector<int>>*>();
+	//--------------------------------------------------------------
+	cout << "\n=================== test ==============================" << endl;
+	// 分别计算 IND  和  POS
+	for (int i = 0; i < COLS - 1; i++)
+	{
+		for (int j = i+1; j < COLS - 1; j++)
+		{
+			vector<int> *dontConsider = new vector<int>();
+			dontConsider->push_back(i);
+			dontConsider->push_back(j);
+			// 计算 IND(P- {...})
+			vector<vector<int>> *ind_p_ai_t = new vector<vector<int>>();
+			calINDP_matli(ds, ind_p_ai_t, dontConsider);
+			ind_pp->push_back(ind_p_ai_t);
+			// 计算 POS p-ai(D)
+			vector<int> *POS = new vector<int>();
+			calPOS(D, ind_p_ai_t, POS, i);
+			POSs->push_back(POS);
+			cout << endl;
+		}
+	}
+
 }
