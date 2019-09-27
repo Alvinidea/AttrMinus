@@ -12,16 +12,20 @@ using namespace std;
 
 获取数据集合
 */
-void getDateaSet(vector<vector<string>> *ds, int rows, int cols)
+void getDateaSet(vector<vector<string>> *ds, int *rows, int cols)
 {
-	
+	cout << "==========================================================" << endl;
+	cout << "=======================数据读取===========================" << endl;
+	cout << "==========================================================" << endl;
+	int count = 0;
 	ifstream input("data.txt");
 	string str;
 	if (input.is_open() == false)
 	{
 		cout << "file open fail !" << endl;
 	}
-	for (int row = 0; row < rows; row++)
+	while( ! input.eof())
+	//for (int row = 0; row < rows; row++)
 	{
 		vector<string> row_data;
 		
@@ -33,23 +37,28 @@ void getDateaSet(vector<vector<string>> *ds, int rows, int cols)
 		}
 		ds->push_back(row_data);
 		cout << endl;
+		count++;
 	}
+	*rows = count;
 }
 
 
-void getAttrVal(vector<vector<string>> *ds, vector<set<string>>* av)
+void getAttrVal(vector<vector<string>> *ds, vector<set<string>>* av,int rows= ROWS,int cols= COLS)
 {
+	cout << "==========================================================" << endl;
+	cout << "=======================打印属性值=========================" << endl;
+	cout << "==========================================================" << endl;
 	av->resize(4);
-	for (int i = 0; i < ROWS; i++)
+	for (int i = 0; i < rows; i++)
 	{
-		for (int j = 0; j < COLS - 1; j++)
+		for (int j = 0; j < cols - 1; j++)
 		{
 			set<string> *sets = &(*av)[j];
 			string str = (*ds)[i][j];
 			sets->insert(str);
 		}
 	}
-	for (int j = 0; j < COLS - 1; j++)
+	for (int j = 0; j < cols - 1; j++)
 	{
 		set<string>::iterator it;
 		set<string> sets = (*av)[j];
@@ -64,13 +73,13 @@ void getAttrVal(vector<vector<string>> *ds, vector<set<string>>* av)
 /*
 	计算决策属性等价类
 */
-void calIND_D(vector<vector<string>> *ds,vector<vector<int>>* D)
+void calIND_D(vector<vector<string>> *ds,vector<vector<int>>* D, int rows = ROWS, int cols = COLS)
 {
 	int flag;
 	vector<int> A,B;
 	int t;
 	D->resize(2);
-	for (int row = 0; row < 14; row++)
+	for (int row = 0; row < rows; row++)
 	{
 		string str = (*ds)[0][4];
 		string str2 = (*ds)[row][4];
@@ -138,7 +147,7 @@ bool is_vector_in_vector(vector<int> *X, vector<int> *Y) {
 	return true;
 }
 
-void calPOS(vector<vector<int>>* D, vector<vector<int>> *ind_p_ai, vector<int> *POS,int ai)
+void calPOS(vector<vector<int>>* D, vector<vector<int>> *ind_p_ai, vector<int> *POS)
 {
 	vector<vector<int>>::iterator it_D;
 	vector<vector<int>>::iterator it_P;
@@ -159,31 +168,34 @@ void calPOS(vector<vector<int>>* D, vector<vector<int>> *ind_p_ai, vector<int> *
 		}
 	}
 	std::sort(POS->begin(), POS->end());
-	if( ai != -1)
-		cout << "POS p-..."  << "(D) : { ";
-	else
-		cout << "POS p(D) : { ";
+	cout << "POS p-..."  << "(D) : { ";
+
 	for (it = POS->begin(); it != POS->end(); it++)
 		cout << *it << ",";
 	cout <<" }"<< endl;
 }
 
 // IND(P-ai)
-void calINDP_ai(vector<vector<string>> *ds, vector<vector<int>> *ind_p_ai,int dontConsider)
+void calINDP_ai(vector<vector<string>> *ds, vector<vector<int>> *ind_p_ai,int dontConsider, int rows = ROWS, int cols = COLS)
 {
 	vector<int> *needAttr = new vector<int>();;
 	
 	vector<vector<int>>::iterator it_u;
 	vector<int>::iterator it;
-	int C[14] = { 0 };
+	//标记数组 
+	int *C = new int[rows];
+	for (int z = 0; z < rows; z++)
+	{
+		C[z] = 0;
+	}
 	setDivAttr(dontConsider, needAttr);
 
-	for (int z = 0; z < 14; z++)
+	for (int z = 0; z < rows; z++)
 	{
 		if (C[z] == 0)
 		{
 			vector<int> type;
-			for (int p = 0; p < 14; p++)
+			for (int p = 0; p < rows; p++)
 			{
 				int a1 = (*needAttr)[0];
 				int a2 = (*needAttr)[1];
@@ -243,7 +255,7 @@ dataNum：数据数目
 
 IND(P-{ai,aj,...,an})
 */
-void calINDP_matli(vector<vector<string>> *ds, vector<vector<int>> *ind_p_ai, vector<int> *dontConsider,int dataNum=14)
+void calINDP_matli(vector<vector<string>> *ds, vector<vector<int>> *ind_p_ai, vector<int> *dontConsider,int rows = ROWS)
 {
 	//需要考虑的属性
 	vector<int> *needAttr = new vector<int>();;
@@ -251,20 +263,20 @@ void calINDP_matli(vector<vector<string>> *ds, vector<vector<int>> *ind_p_ai, ve
 	vector<vector<int>>::iterator it_u;
 	vector<int>::iterator it;
 	//标记数组 
-	int *C = new int[dataNum];
-	for (int z = 0; z < dataNum; z++)
+	int *C = new int[rows];
+	for (int z = 0; z < rows; z++)
 	{
 		C[z] = 0;
 	}
 
 	setDivAttr(dontConsider, needAttr);
 
-	for (int z = 0; z < dataNum; z++)
+	for (int z = 0; z < rows; z++)
 	{
 		if (C[z] == 0)
 		{//防止多次判断 所以设置一个标记数组
 			vector<int> type;
-			for (int p = 0; p < dataNum; p++)
+			for (int p = 0; p < rows; p++)
 			{
 				bool flag = true;
 				int att;
@@ -306,20 +318,25 @@ void calINDP_matli(vector<vector<string>> *ds, vector<vector<int>> *ind_p_ai, ve
 }
 
 // IND(P)
-void calIND_P(vector<vector<string>> *ds, vector<vector<int>> *ind_p)
+void calIND_P(vector<vector<string>> *ds, vector<vector<int>> *ind_p, int rows = ROWS)
 {
 	vector<int> *needAttr = new vector<int>();;
 
 	vector<vector<int>>::iterator it_u;
 	vector<int>::iterator it;
-	int C[14] = { 0 };
+	//标记数组 
+	int *C = new int[rows];
+	for (int z = 0; z < rows; z++)
+	{
+		C[z] = 0;
+	}
 
-	for (int z = 0; z < 14; z++)
+	for (int z = 0; z < rows; z++)
 	{
 		if (C[z] == 0)
 		{
 			vector<int> type;
-			for (int p = 0; p < 14; p++)
+			for (int p = 0; p < rows; p++)
 			{
 				if (((*ds)[z])[0] == ((*ds)[p])[0] &&
 					((*ds)[z])[1] == ((*ds)[p])[1] &&
@@ -347,8 +364,8 @@ void calIND_P(vector<vector<string>> *ds, vector<vector<int>> *ind_p)
 	}
 	cout << " }" << endl;
 }
-
-void calRED(vector<vector<int>*>* POSs, vector<int> *pos_p, vector<vector<int>> *red )
+// 求RED
+void calRED(vector<vector<int>*>* POSs, vector<int> *pos_p, vector<vector<int>> *red, int rows = ROWS, int cols = COLS)
 {
 	vector<vector<int>*>::iterator it_pos;
 	bool flag;
@@ -371,7 +388,7 @@ void calRED(vector<vector<int>*>* POSs, vector<int> *pos_p, vector<vector<int>> 
 			if (flag == true)
 			{ 
 				vector<int> re;
-				for (int i = 0; i < COLS - 1; i++)
+				for (int i = 0; i < cols - 1; i++)
 				{
 					if (i != ai)
 						re.push_back(i+1);
@@ -406,11 +423,11 @@ vector<int> vectors_intersection(vector<int> v1, vector<int> v2) {
 	return v;
 }
 
-void calCORE(vector<vector<int>> *red, vector<int>* core)
+void calCORE(vector<vector<int>> *red, vector<int>* core, int rows = ROWS, int cols = COLS)
 {
 	vector<vector<int>>::iterator it_r;
 	vector<int> v;
-	for (int i = 1; i < COLS ; i++)
+	for (int i = 1; i < rows ; i++)
 	{
 		v.push_back(i);
 	}
@@ -430,6 +447,10 @@ void calCORE(vector<vector<int>> *red, vector<int>* core)
 
 int main()
 {
+	int rows = ROWS;
+	int cols = COLS;
+	cout << "请输入属性数目(包含决策属性) : " ;
+	cin >>  cols;
 	// 存储数据表
 	vector<vector<string>> *ds = new vector<vector<string>>();
 	// 打印各个属性属性值
@@ -447,16 +468,16 @@ int main()
 	// 存储 Core
 	vector<int>* core = new vector<int>();
 
-	getDateaSet(ds, 14,5);
+	getDateaSet(ds, &rows,cols);
 
-	getAttrVal(ds, attrVal);
+	getAttrVal(ds, attrVal, rows, cols);
 
 	calIND_D(ds, D);
 
 	calIND_P(ds,ind_p_);
 
 	vector<int> *POS_p = new vector<int>();
-	calPOS(D, ind_p_, POS_p, -1);
+	calPOS(D, ind_p_, POS_p);
 
 	cout << endl;
 	// 分别计算 IND  和  POS
@@ -464,18 +485,15 @@ int main()
 	{
 		// 计算 IND(P-ai)
 		vector<vector<int>> *ind_p_ai = new vector<vector<int>>();
-		calINDP_ai(ds, ind_p_ai, i);
+		calINDP_ai(ds, ind_p_ai, i,rows, cols);
 		ind_p->push_back(ind_p_ai);
 		// 计算 POS p-ai(D)
 		vector<int> *POS = new vector<int>();
-		calPOS(D, ind_p_ai, POS, i);
+		calPOS(D, ind_p_ai, POS);
 		POSs->push_back(POS);
 		cout << endl;
 	}
-	// 计算RED
-	calRED(POSs, POS_p, red);
-	// 计算CORE
-	calCORE(red,core);
+
 
 	//--------------------------------------------------------------
 		// 存储所有的 IND(P-ai)
@@ -492,14 +510,18 @@ int main()
 			dontConsider->push_back(j);
 			// 计算 IND(P- {...})
 			vector<vector<int>> *ind_p_ai_t = new vector<vector<int>>();
-			calINDP_matli(ds, ind_p_ai_t, dontConsider);
+			calINDP_matli(ds, ind_p_ai_t, dontConsider, rows);
 			ind_pp->push_back(ind_p_ai_t);
 			// 计算 POS p-ai(D)
 			vector<int> *POS = new vector<int>();
-			calPOS(D, ind_p_ai_t, POS, i);
+			calPOS(D, ind_p_ai_t, POS);
 			POSs->push_back(POS);
 			cout << endl;
 		}
 	}
 
+	// 计算RED
+	calRED(POSs, POS_p, red, rows, cols);
+	// 计算CORE
+	calCORE(red, core, rows, cols);
 }
